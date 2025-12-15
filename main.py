@@ -3,10 +3,12 @@ import bs4
 import time
 import datetime
 import os
+import math
 
-file_name = "./Kursy walut - dane.csv"
-startSeconds = 20
+file_name = "../Kursy walut - dane.csv"
+starts_at_seconds = 20
 
+url = "https://www.santander.pl/klient-indywidualny/karty-platnosci-i-kantor/kantor-santander"
 
 def site_data_refresh_sync_start_countdown(seconds_when_to_start):
     # countdown to the start of scraping, to sync with data refresh on website
@@ -56,6 +58,24 @@ def try_open_file(f_name, mode):
         return 2
 
 
+def get_bs4_request(f_url):
+    is_done_not = True
+    number_of_tries = 1
+    wait = 5
+
+    while is_done_not:
+        try:   
+            bs4_request =  bs4.BeautifulSoup(requests.get(f_url).text, "html.parser")
+            is_done_not = False
+            break
+        except:
+            print(f'Connection Error(Retrying in: {wait} seconds). Attempt: {number_of_tries}')
+            is_done_not = True
+            number_of_tries += 1
+            time.sleep(wait)
+            continue
+    
+    return bs4_request
 
 
 start_time = datetime.datetime.now() # used to determine whether a new day started
@@ -66,30 +86,17 @@ print(f'Opened file "{file_name}"')
 file.close()
 
 print(("Date;Time;EUR sell;EUR buy;USD sell;USD buy;CHF buy;CHF sell;GBP buy;GBP sell\n"))
-print(f'Starts at: XX:XX:{startSeconds}')
+print(f'Starts at: XX:XX:{starts_at_seconds}')
 
 # Wait for 20 seconds past a minute to start
-site_data_refresh_sync_start_countdown(startSeconds)
+site_data_refresh_sync_start_countdown(starts_at_seconds)
 print()
 
 num_of_today_reads = 1
 while num_of_today_reads <= 24 * 60:
     file = try_open_file(file_name, "a")
 
-    # Download request and process data
-    url = "https://www.santander.pl/klient-indywidualny/karty-platnosci-i-kantor/kantor-santander"
-
-    def get_bs4_request(f_url):
-        try:
-            bs4_request =  bs4.BeautifulSoup(requests.get(f_url).text, "html.parser")
-        except:
-            print("ConnectionError")
-            time.sleep(1)
-            bs4_request = get_bs4_request(f_url)
-
-        return bs4_request
-
-
+    # Download request and processing data
     req = get_bs4_request(url)
     sellPrice = req.find_all("div", {"class": "exchange_office__table-value js-exchange_office__rate-sell-value"})
     buyPrice = req.find_all("div", {"class": "exchange_office__table-value js-exchange_office__rate-buy-value"})
@@ -160,7 +167,7 @@ while num_of_today_reads <= 24 * 60:
         start_time = now_time
 
     else:
-        print(f'>Not a new day!: {start_time.day}-{start_time.month}-{start_time.year} -> {now_time.day}-{now_time.month}-{now_time.year} | {num_of_today_reads}')
+        print(f'>Not a new day!: {start_time.day}-{start_time.month}-{start_time.year} -> {now_time.day}-{now_time.month}-{now_time.year} | {num_of_today_reads} | Run time: ~ {0 if num_of_today_reads < 60 else math.floor(num_of_today_reads/60)} h : {num_of_today_reads % 60} min ')
 
     # wait till its 20 seconds past every minute for changes on the website
     time.sleep(0.5)
