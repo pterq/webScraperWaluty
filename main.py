@@ -151,12 +151,15 @@ if __name__ == "__main__":
 
             #  print date and time
             print(f'| #: {num_of_reads_today} | {entry[0]} | {entry[1]} |')
-            print("Name  Sell     Buy      Spread")
+            print("-----------------------------------")
+            print("| Name | Sell   | Buy    | Spread |")
+            print("-----------------------------------")
 
             # print currencies sell buy rates and their spread
             currency_names = ['EUR', 'USD', 'CHF', 'GBP']
             for i in range(2, 9, 2):
-                print(f'{currency_names[int(i/2)-1]} | {entry[i]} | {entry[i+1]} | {"{:.4f}".format(float(entry[i+1].replace(",", ".")) - float(entry[i].replace(",", ".")))}')
+                print(f'| {currency_names[int(i/2)-1]}  | {entry[i]} | {entry[i+1]} | {"{:.4f}".format(float(entry[i+1].replace(",", ".")) - float(entry[i].replace(",", ".")))} |')
+            print("-----------------------------------")
 
             # Check if there is a new day
             is_new_day = script_start_time.day != time_now.day
